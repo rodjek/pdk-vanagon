@@ -102,11 +102,6 @@ component "puppet-forge-api" do |pkg, settings, platform|
       # 1.8.1 version of json in ruby 2.1.9.
       build_commands << gem_install.call('2.4.0', 'json', '1.8.6')
 
-      beaker_native_deps = {
-        'oga':     '2.15',
-        'ruby-ll': '2.1.2'
-      }
-
       pdk_ruby_versions.each do |rubyapi|
         # Byebug requires special treatment b/c the cross compiled into a fat gem
         byebug_libdir = File.join(puppet_cachedir, rubyapi, "gems", "byebug-9.0.6-x64-mingw32", "lib", "byebug")
@@ -114,12 +109,19 @@ component "puppet-forge-api" do |pkg, settings, platform|
           gem_install.call(rubyapi, 'byebug', '9.0.6'),
           "cp #{File.join(byebug_libdir, rubyapi.split('.')[0..1].join('.'), "byebug.so")} #{File.join(byebug_libdir, "byebug.so")}",
         ]
+      end
+    end
 
-        # Add the remaining beaker dependencies that have been natively compiled
-        # and repackaged.
-        build_commands += beaker_native_deps.collect do |gem, ver|
-          gem_install.call(rubyapi, gem, ver)
-        end
+    beaker_native_deps = {
+      'oga':     '2.15',
+      'ruby-ll': '2.1.2'
+    }
+
+    pdk_ruby_versions.each do |rubyapi|
+      # Add the remaining beaker dependencies that have been natively compiled
+      # and repackaged.
+      build_commands += beaker_native_deps.collect do |gem, ver|
+        gem_install.call(rubyapi, gem, ver)
       end
     end
 
