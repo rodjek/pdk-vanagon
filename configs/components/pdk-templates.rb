@@ -77,6 +77,7 @@ component "pdk-templates" do |pkg, settings, platform|
     build_commands << "echo 'gem \"listen\",                                     require: false' >> #{mod_name}/Gemfile"
     build_commands << "echo 'gem \"codecov\",                                    require: false' >> #{mod_name}/Gemfile"
     build_commands << "echo 'gem \"license_finder\",                             require: false' >> #{mod_name}/Gemfile"
+    build_commands << "echo 'gem \"puppet_litmus\",                             require: false' >> #{mod_name}/Gemfile"
 
     # Add some Beaker dependencies for Linux
     unless platform.is_windows?
@@ -87,7 +88,7 @@ component "pdk-templates" do |pkg, settings, platform|
 
     # Run 'bundle install' in the generated module to cache the gems
     # inside the project cachedir.
-    build_commands << "pushd #{mod_name} && GEM_PATH=\"#{gem_path_with_puppet_cache}\" GEM_HOME=\"#{ruby_cachedir}\" #{settings[:host_bundle]} install && popd"
+    build_commands << "pushd #{mod_name} && GEM_PATH=\"#{gem_path_with_puppet_cache}\" GEM_HOME=\"#{ruby_cachedir}\" #{settings[:host_bundle]} update && popd"
 
     # Install bundler into the gem cache
     build_commands << "GEM_HOME=#{ruby_cachedir} #{settings[:host_gem]} install --no-document --local --bindir /tmp ../bundler-#{settings[:bundler_version]}.gem"
@@ -116,7 +117,7 @@ component "pdk-templates" do |pkg, settings, platform|
       build_commands << "#{pdk_bin} new module #{local_mod_name} --skip-interview --template-url=file:///#{File.join(settings[:cachedir], 'pdk-templates.git')}"
 
       # Resolve default gemfile deps
-      build_commands << "pushd #{local_mod_name} && PUPPET_GEM_VERSION=\"#{local_settings[:latest_puppet]}\" GEM_PATH=\"#{local_gem_path}\" GEM_HOME=\"#{local_ruby_cachedir}\" #{local_settings[:host_bundle]} install && popd"
+      build_commands << "pushd #{local_mod_name} && PUPPET_GEM_VERSION=\"#{local_settings[:latest_puppet]}\" GEM_PATH=\"#{local_gem_path}\" GEM_HOME=\"#{local_ruby_cachedir}\" #{local_settings[:host_bundle]} update && popd"
       # Update the Gemfile.lock to resolve based on the local gem cache.
       build_commands << "pushd #{local_mod_name} && GEM_PATH=\"#{local_gem_path}\" GEM_HOME=\"#{local_ruby_cachedir}\" #{local_settings[:host_bundle]} lock --local --update && popd"
 
@@ -132,6 +133,7 @@ component "pdk-templates" do |pkg, settings, platform|
       build_commands << "echo 'gem \"puppet-strings\",                             require: false' >> #{local_mod_name}/Gemfile"
       build_commands << "echo 'gem \"codecov\",                                    require: false' >> #{local_mod_name}/Gemfile"
       build_commands << "echo 'gem \"license_finder\",                             require: false' >> #{local_mod_name}/Gemfile"
+      build_commands << "echo 'gem \"puppet_litmus\",                             require: false' >> #{local_mod_name}/Gemfile" unless rubyver.start_with?('2.1')
       build_commands << "echo 'gem \"nokogiri\", \"<= #{settings[:nokogiri_version]}\",                     require: false' >> #{local_mod_name}/Gemfile"
 
       # Add some Beaker dependencies for Linux
@@ -142,7 +144,7 @@ component "pdk-templates" do |pkg, settings, platform|
       end
 
       # Install all the deps into the package cachedir.
-      build_commands << "pushd #{local_mod_name} && PUPPET_GEM_VERSION=\"#{local_settings[:latest_puppet]}\" GEM_PATH=\"#{local_gem_path}\" GEM_HOME=\"#{local_ruby_cachedir}\" #{local_settings[:host_bundle]} install && popd"
+      build_commands << "pushd #{local_mod_name} && PUPPET_GEM_VERSION=\"#{local_settings[:latest_puppet]}\" GEM_PATH=\"#{local_gem_path}\" GEM_HOME=\"#{local_ruby_cachedir}\" #{local_settings[:host_bundle]} update && popd"
 
       # Install bundler itself into the gem cache for this ruby
       build_commands << "GEM_HOME=#{local_ruby_cachedir} #{local_settings[:host_gem]} install --no-document --local --bindir /tmp ../bundler-#{settings[:bundler_version]}.gem"
